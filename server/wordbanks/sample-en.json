@@ -1,0 +1,23 @@
+{
+  "id": "sample-en",
+  "name": "Sample English",
+  "language": "en",
+  "words": [
+    { "answer": "telescope", "category": "Science" },
+    { "answer": "volcano", "category": "Geography" },
+    { "answer": "algorithm", "category": "Computing" },
+    { "answer": "moonlight", "category": "Everyday" },
+    { "answer": "stadium", "category": "Places" },
+    { "answer": "gravity", "category": "Physics" },
+    { "answer": "sandwich", "category": "Food" },
+    { "answer": "detective", "category": "Jobs" },
+    { "answer": "compass", "category": "Tools" },
+    { "answer": "battery", "category": "Technology" },
+    { "answer": "thunder", "category": "Weather" },
+    { "answer": "library", "category": "Places" },
+    { "answer": "magnet", "category": "Science" },
+    { "answer": "passport", "category": "Travel" },
+    { "answer": "pyramid", "category": "History" },
+    { "answer": "microscope", "category": "Science" }
+  ]
+}

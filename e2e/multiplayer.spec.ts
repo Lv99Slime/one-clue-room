@@ -9,13 +9,8 @@ test("three players can run a duplicate-clue round", async ({ browser }) => {
   const bob = await bobContext.newPage();
   const charlie = await charlieContext.newPage();
 
-  await host.goto("/");
-  await host.getByLabel("Display name").fill("Alice");
-  await host.getByRole("button", { name: "Create room" }).click();
+  const roomCode = await createRoom(host, "Alice");
   await expect(host.getByRole("button", { name: "Start game" })).toBeVisible();
-
-  const roomCode = new URL(host.url()).pathname.split("/room/")[1];
-  expect(roomCode).toBeTruthy();
   await expect(host.getByText(`Room code: ${roomCode}`)).toBeVisible();
   await expect(host.getByText("Join link")).toBeVisible();
 
@@ -54,11 +49,7 @@ test("wrong guess burns one extra scoring card", async ({ browser }) => {
   const bob = await bobContext.newPage();
   const charlie = await charlieContext.newPage();
 
-  await host.goto("/");
-  await host.getByLabel("Display name").fill("Alice");
-  await host.getByRole("button", { name: "Create room" }).click();
-
-  const roomCode = new URL(host.url()).pathname.split("/room/")[1];
+  const roomCode = await createRoom(host, "Alice");
   await joinRoom(bob, roomCode, "Bob");
   await expect(host.getByText("Bob")).toBeVisible();
   await joinRoom(charlie, roomCode, "Charlie");
@@ -80,6 +71,52 @@ test("wrong guess burns one extra scoring card", async ({ browser }) => {
   await bobContext.close();
   await charlieContext.close();
 });
+
+test("correct guess adds one point without burning an extra card", async ({ browser }) => {
+  const hostContext = await browser.newContext();
+  const bobContext = await browser.newContext();
+  const charlieContext = await browser.newContext();
+
+  const host = await hostContext.newPage();
+  const bob = await bobContext.newPage();
+  const charlie = await charlieContext.newPage();
+
+  const roomCode = await createRoom(host, "Alice");
+  await joinRoom(bob, roomCode, "Bob");
+  await expect(host.getByText("Bob")).toBeVisible();
+  await joinRoom(charlie, roomCode, "Charlie");
+  await expect(host.getByText("Charlie")).toBeVisible();
+
+  await host.getByRole("button", { name: "Start game" }).click();
+  const answer = (await bob.locator(".answer-plate strong").textContent())?.trim();
+  expect(answer).toBeTruthy();
+
+  await submitClue(bob, "clear");
+  await submitClue(charlie, "sharp");
+  await bob.getByRole("button", { name: "Reveal valid clues" }).click();
+
+  await host.getByLabel("Your guess").fill(answer!);
+  await host.getByRole("button", { name: "Submit" }).click();
+
+  await expect(host.getByText("Correct", { exact: true })).toBeVisible();
+  await expect(host.getByText("1/13")).toBeVisible();
+  await expect(host.getByLabel("Score 1 out of 13")).toBeVisible();
+
+  await hostContext.close();
+  await bobContext.close();
+  await charlieContext.close();
+});
+
+async function createRoom(page: import("@playwright/test").Page, name: string) {
+  await page.goto("/");
+  await page.getByLabel("Display name").fill(name);
+  await page.getByRole("button", { name: "Create room" }).click();
+  await page.waitForURL(/\/room\//);
+  const roomCode = new URL(page.url()).pathname.split("/room/")[1];
+  expect(roomCode).toBeTruthy();
+  return roomCode;
+}
+
 async function joinRoom(page: import("@playwright/test").Page, roomCode: string, name: string) {
   await page.goto(`/room/${roomCode}`);
   await page.getByLabel("Display name").fill(name);
